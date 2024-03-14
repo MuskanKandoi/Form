@@ -1,97 +1,141 @@
-const { useState, useEffect } = React;
-
-const App = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    phone: '',
-    grade: '',
-    agree: false,
-    captcha: '',
-    enteredCaptcha: ''
+(function(){
+    const fonts = ["cursive", "sans-serif", "serif", "monospace"];
+    let captchaValue = "";
+  
+    function generateCaptcha() {
+      let value = btoa(Math.random() * 1000000000);
+      value = value.substr(0, 5 + Math.random() * 5);
+      captchaValue = value;
+    }
+  
+    function setCaptcha() {
+      let html = captchaValue.split("").map((char) => {
+        const rotate = -20 + Math.trunc(Math.random() * 30);
+        const font = Math.trunc(Math.random() * fonts.length);
+        return `<span style="transform:rotate(${rotate}deg);font-family:${fonts[font]}">${char}</span>`;
+      }).join("");
+      document.querySelector(".login-form .captcha .preview").innerHTML = html;
+    }
+  
+    function initCaptcha() {
+      document.querySelector(".login-form .captcha .captcha-refresh").addEventListener("click", function () {
+        generateCaptcha();
+        setCaptcha();
+      });
+      generateCaptcha();
+      setCaptcha();
+    }
+    initCaptcha();
+  
+    document.querySelector(".login-form #login-btn").addEventListener("click", function () {
+      let inputCaptchaValue = document.querySelector(".login-form .captcha input").value;
+      if (inputCaptchaValue === captchaValue) {
+        swal("", "Logging In!", "success");
+      } else {
+        swal("Invalid captcha");
+      }
+    });
+  })();
+  
+  document.addEventListener('DOMContentLoaded', function () {
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const collegeInput = document.getElementById('college');
+    const cgpaInput = document.getElementById('cgpa');
+    const emailInput = document.getElementById('email');
+    const captchaFormInput = document.getElementById('captcha-form');
+  
+    const loginBtn = document.getElementById('login-btn');
+  
+    loginBtn.addEventListener('click', function (event) {
+      event.preventDefault();
+  
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+      const college = collegeInput.value.trim();
+      const cgpa = cgpaInput.value.trim();
+      const email = emailInput.value.trim();
+      const captcha = captchaFormInput.value.trim();
+  
+      // Validate inputs
+      if (!validateUsername(username) || !validatePassword(password) || !validateCollege(college) || !validateCGPA(cgpa) || !validateEmail(email) || !validateCaptcha(captcha)) {
+        return; // Prevent form submission if any input is invalid
+      }
+  
+      // If all inputs are valid, submit the form
+      swal('Success!', 'Form submitted successfully!', 'success');
+    });
+  
+    // Validation functions
+    function validateUsername(username) {
+      if (!username) {
+        swal('Error!', 'Please enter your username.', 'error');
+        return false;
+      }
+      // Add additional validation rules here if needed
+      return true;
+    }
+  
+    function validatePassword(password) {
+      if (!password) {
+        swal('Error!', 'Please enter your password.', 'error');
+        return false;
+      }
+      if (password.length < 8) {
+        swal('Error!', 'Password must be at least 8 characters long.', 'error');
+        return false;
+      }
+      // Add additional validation rules here if needed
+      return true;
+    }
+  
+    function validateCollege(college) {
+      if (!college) {
+        swal('Error!', 'Please enter your college.', 'error');
+        return false;
+      }
+      // Add additional validation rules here if needed
+      return true;
+    }
+  
+    function validateCGPA(cgpa) {
+      if (!cgpa) {
+        swal('Error!', 'Please enter your CGPA.', 'error');
+        return false;
+      }
+      if (isNaN(cgpa) || parseFloat(cgpa) <= 0 || parseFloat(cgpa) >= 10) {
+        swal('Error!', 'Please enter a numeric CGPA value between 0 and 10.', 'error');
+        return false;
+      }
+      // Add additional validation rules here if needed
+      return true;
+    }
+  
+    function validateEmail(email) {
+      if (!email) {
+        swal('Error!', 'Please enter your email.', 'error');
+        return false;
+      }
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        swal('Error!', 'Please enter a valid email address.', 'error');
+        return false;
+      }
+      // Add additional validation rules here if needed
+      return true;
+    }
+  
+  function validateCaptcha(captcha) {
+    if (!captcha) {
+      swal('Error!', 'Please enter the captcha.', 'error');
+      return false;
+    }
+    // Compare the entered captcha with the generated captcha
+    if (captcha !== captchaValue) {
+      swal('Error!', 'Invalid captcha.', 'error');
+      return false;
+    }
+    // Add additional validation rules here if needed
+    return true;
+  }
   });
-
-  useEffect(() => {
-    generateCaptcha();
-  }, []);
-
-  const generateCaptcha = () => {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let captcha = '';
-    for (let i = 0; i < 6; i++) {
-      captcha += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    setFormData({ ...formData, captcha, enteredCaptcha: '' });
-    drawCaptcha(captcha);
-  };
-
-  const drawCaptcha = (text) => {
-    const canvas = document.getElementById('captchaCanvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = '30px Arial';
-    ctx.fillStyle = '#333';
-    ctx.fillText(text, 10, 30);
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (formData.enteredCaptcha === formData.captcha && formData.agree) {
-      // Form submission logic here
-      console.log('Form submitted successfully!');
-    } else {
-      alert('Please enter valid captcha and agree to terms.');
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Name:
-        <input type="text" name="name" value={formData.name} onChange={handleChange} required />
-      </label>
-      <br />
-      <label>
-        Email:
-        <input type="email" name="email" value={formData.email} onChange={handleChange} required />
-      </label>
-      <br />
-      <label>
-        Password:
-        <input type="password" name="password" value={formData.password} onChange={handleChange} required />
-      </label>
-      <br />
-      <label>
-        Phone Number:
-        <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required />
-      </label>
-      <br />
-      <label>
-        Grade:
-        <input type="text" name="grade" value={formData.grade} onChange={handleChange} />
-      </label>
-      <br />
-      <label className="agree-label">
-        <input type="checkbox" name="agree" className="agree-checkbox" checked={formData.agree} onChange={handleChange} required />
-        I agree to above terms and conditions
-      </label>
-      <br />
-      <label>
-        Captcha:
-        <input type="text" name="enteredCaptcha" value={formData.enteredCaptcha} onChange={handleChange} />
-        <canvas id="captchaCanvas" width="150" height="40"></canvas>
-        <button type="button" onClick={generateCaptcha}>Refresh Captcha</button>
-      </label>
-      <br />
-      <button type="submit">Submit</button>
-    </form>
-  );
-};
-
-ReactDOM.render(<App />, document.getElementById('root'));
+  
